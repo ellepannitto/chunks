@@ -1,0 +1,19 @@
+Metadata-Version: 1.0
+Name: chunks
+Version: 0.1.0
+Summary: chunks
+Home-page: UNKNOWN
+Author: Ludovica Pannitto
+Author-email: ludovica.pannitto@unitn.it
+License: MIT
+Description: # ```chunks```: 
+        
+        
+        ## Install
+        Under the ```chunks``` directory:
+        ```
+        python3 setup.py install
+        ```
+        
+        
+Platform: any
