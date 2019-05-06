@@ -9,12 +9,12 @@ handlers:
     class: logging.StreamHandler
     formatter: simple
 loggers:
-  entropix.core:
+  chunks.core:
     level: INFO
     handlers: [console]
-  entropix.main:
+  chunks.main:
     level: INFO
     handlers: [console]
-  entropix.utils:
+  chunks.utils:
     level: INFO
     handlers: [console]

@@ -1,3 +1,4 @@
+README.md
 setup.py
 chunks/__init__.py
 chunks/main.py
