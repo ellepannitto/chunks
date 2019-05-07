@@ -1,15 +1,22 @@
 import nltk
+from nltk.util import everygrams
 import collections
 
 #TODO: sentence is a hard boundary
+#TODO: multiprocessing
 
-text = [c.lower() for line in open('/home/ludovica/adventure-all.head.txt').readlines()[:10000] for c in line if c.isalpha() or c in ['.', ',', '?', '!', ' ']]
+text = [c.lower() for line in open('/home/ludovica/adventure-all.head.txt').readlines()[:10000] for c in line]
 
 max_freq = 10
+#eg = list(everygrams(text, min_len=2, max_len=max_freq))
+#FDist = nltk.FreqDist(eg)
+
+#FDist = {x:y for x, y in FDist.items() if y>10}
+
 freqs_list = []
 for i in range(max_freq):
   freqs_list.append(collections.defaultdict(int))
-freqs_10grams = nltk.FreqDist(nltk.ngrams(text, 10))
+freqs_10grams = nltk.FreqDist(nltk.ngrams(text, max_freq))
 freqs_list[-1] = freqs_10grams
 
 for ngram, freq in freqs_10grams.items():
@@ -20,37 +27,56 @@ for ngram, freq in freqs_10grams.items():
 #    print(freqs_list[i])
 #  input()
 
-for idx in range(len(freqs_list)-1):
-    list = freqs_list[len(freqs_list)-idx-1]
-    for ngram, freq in list.items():
-        condprob = freq*1.0 / freqs_list[len(freqs_list)-idx-2][ngram[:-1]]
-        list[ngram] = condprob
+voc = set(freqs_list[0].keys())
+
+for idx, dict in enumerate(freqs_list):
+    dict = {x:y for x, y in dict.items() if y > 10}
+    freqs_list[idx] = dict
+
 
 most_frequent_bigram = sorted(freqs_list[1].items(), key=lambda x: -x[1])[0]
 a, b = most_frequent_bigram[0]
+s = ('{}{}'.format(a,b),)
 freq = most_frequent_bigram[1]
 freqs_list[0]['{}{}'.format(a,b)] = freq
 del freqs_list[1][most_frequent_bigram[0]]
-print(most_frequent_bigram)
+#print(most_frequent_bigram)
 go_on = True
 
 while go_on:
-    for idx, dict in enumerate(freqs_list[2:]):
-        for ngram, freq in dict.items():
-            if ngram[0]==a and ngram[1]==b:
-                remaining_part = ngram[2:]
-                s = '{}{}'.format(a,b)
-                if len(s) < 10:
-                    new_tuple = tuple([s])+remaining_part
-                    freqs_list[idx+1][new_tuple] = freq
-#                print(new_tuple)
-#                input()
+    print('found @{}@{}@ as most frequent pair - {}'.format(a, b, s[0] in voc))
+    voc.add(s[0])
+    if not s[0] in voc or s[0] in voc:
+        for idx, dict in enumerate(freqs_list[2:]):
+    #        print('examining dict at position {}'.format(idx+2))
+            for ngram, freq in dict.items():
+                for idx_ngram, char in enumerate(ngram[:-1]):
+                    if ngram[idx_ngram] == a and ngram[idx_ngram+1] == b:
+    #                    print('found ngram that contains {}: {} - {}'.format(s[0], ngram, freq))
+                        remaining_part = (ngram[:idx_ngram],ngram[idx_ngram+2:])
+    #                    print('split {} in {}'.format(ngram, remaining_part))
+                        left = remaining_part[0]+(a,)
+                        right = (b,)+remaining_part[1]
 
-    most_frequent_bigram = sorted(freqs_list[1].items(), key=lambda x: -x[1])[0]
-    print(most_frequent_bigram)
-    a, b = most_frequent_bigram[0]
-    freq = most_frequent_bigram[1]
-    freqs_list[0]['{}{}'.format(a,b)] = freq
-    del freqs_list[1][most_frequent_bigram[0]]
+                        if left in freqs_list[idx+1]:
+    #                        print('in dict at position {}, frequency of {} is {}'.format(idx+1, left, freqs_list[idx+1][left]))
+                            freqs_list[idx+1][left] -= freq
+    #                        print('in dict at position {}, NEW frequency of {} is {}'.format(idx+1, left, freqs_list[idx+1][left]))
 
-#    input()
+                        if right in freqs_list[idx+1]:
+    #                        print('in dict at position {}, frequency of {} is {}'.format(idx+1, right, freqs_list[idx+1][right]))
+                            freqs_list[idx+1][right] -= freq
+    #                        print('in dict at position {}, NEW frequency of {} is {}'.format(idx+1, right, freqs_list[idx+1][right]))
+
+                        if len(s) < max_freq:
+                            new_tuple = remaining_part[0]+s+remaining_part[1]
+                            freqs_list[idx+1][new_tuple] = freq
+    #                    input()
+
+        most_frequent_bigram = sorted(freqs_list[1].items(), key=lambda x: -x[1])[0]
+    #    print(most_frequent_bigram)
+        a, b = most_frequent_bigram[0]
+        s = ('{}{}'.format(a,b),)
+        freq = most_frequent_bigram[1]
+        freqs_list[0]['{}{}'.format(a,b)] = freq
+        del freqs_list[1][most_frequent_bigram[0]]
