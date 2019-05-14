@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import string
 import collections
+import sys
 
 class LinkedListRecord:
     def __init__(self, sym, pos, EOS = False):
@@ -42,7 +43,9 @@ charfreq = collections.defaultdict(int)
 charset = string.printable
 text_ll = []
 i=0
-with open('adventure-all.head.txt', errors="ignore") as fin:
+
+fname = sys.argv[1]
+with open(fname, errors="ignore") as fin:
     for line in tqdm(fin):
         line = line.strip()
         for c in line:
